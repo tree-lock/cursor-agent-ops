@@ -1,0 +1,42 @@
+---
+description: 高德地图 (AMap) MCP 操作最佳实践
+globs: 
+alwaysApply: false
+---
+# 高德地图 (AMap) 操作最佳实践
+
+## 核心原则
+1. **精准搜索**：优先使用 `maps_text_search` 获取准确的 POI ID，再进行后续操作。
+2. **链接生成**：生成高德地图直达链接时，统一使用 `https://www.amap.com/place/[POI_ID]` 格式。
+3. **多维验证**：在推荐地点时，结合距离、通勤时间（步行/驾车/公交）和周边配套进行综合分析。
+
+## 常用工具链
+- **搜索地点**：`maps_text_search` (关键词) -> 获取 `id` (POI ID)
+- **周边搜索**：`maps_around_search` (中心点坐标 + 关键词)
+- **详情查询**：`maps_search_detail` (使用 `id`)
+- **路径规划**：
+  - 步行：`maps_direction_walking` (适合 < 2km)
+  - 公交/地铁：`maps_direction_transit_integrated` (适合 > 2km)
+  - 驾车：`maps_direction_driving`
+
+## 常见问题及解决方案
+
+### 1. 链接跳转不准确
+- **问题**：使用 `poi/` 或其他格式可能导致跳转失败或定位偏差。
+- **解决方案**：始终使用 `https://www.amap.com/place/[POI_ID]`。
+- **验证**：必要时使用 Chrome DevTools MCP (`new_page`, `take_snapshot`) 验证链接是否有效。
+
+### 2. 路径规划选择
+- **场景**：短距离（1-2km）通勤分析。
+- **建议**：同时查询步行和公交路径。往往发现步行/骑行比公交更高效（省去等车和步行进出站时间）。
+
+### 3. 地址解析
+- **工具**：`maps_geo` (地址转坐标) 和 `maps_regeocode` (坐标转地址)。
+- **注意**：输入地址越详细，解析坐标越准确。
+
+## 示例流程：租房推荐
+1. **确定目标**：解析工作地点坐标 (`maps_geo`)。
+2. **搜索房源**：以工作地为中心，搜索周边 "小区" (`maps_around_search`)。
+3. **获取详情**：查询候选小区的详细信息 (`maps_search_detail`)。
+4. **计算通勤**：分别计算步行和公交通勤时间 (`maps_direction_walking`, `maps_direction_transit_integrated`)。
+5. **生成报告**：汇总信息，生成包含直达链接的推荐报告。
