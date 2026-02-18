@@ -1,0 +1,145 @@
+{
+  "BlackCat_Stylized_Mat": {
+    "use_nodes": true,
+    "nodes": [
+      {
+        "name": "材质输出",
+        "type": "ShaderNodeOutputMaterial"
+      },
+      {
+        "name": "原理化 BSDF",
+        "type": "ShaderNodeBsdfPrincipled",
+        "base_color": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929
+        ],
+        "roughness": 0.5,
+        "metallic": 0.0
+      },
+      {
+        "name": "图像纹理",
+        "type": "ShaderNodeTexImage",
+        "image": "texture_diffuse-226b94f9-5c20-448b-b38b-2c11438aa253.png"
+      },
+      {
+        "name": "去色",
+        "type": "ShaderNodeRGBToBW"
+      },
+      {
+        "name": "颜色渐变",
+        "type": "ShaderNodeValToRGB"
+      },
+      {
+        "name": "混合 (旧版)",
+        "type": "ShaderNodeMixRGB"
+      }
+    ]
+  },
+  "EarthMaterial": {
+    "use_nodes": true,
+    "nodes": [
+      {
+        "name": "材质输出",
+        "type": "ShaderNodeOutputMaterial"
+      },
+      {
+        "name": "原理化 BSDF",
+        "type": "ShaderNodeBsdfPrincipled",
+        "base_color": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929
+        ],
+        "roughness": 0.30000001192092896,
+        "metallic": 0.0
+      },
+      {
+        "name": "纹理坐标",
+        "type": "ShaderNodeTexCoord"
+      },
+      {
+        "name": "映射",
+        "type": "ShaderNodeMapping"
+      },
+      {
+        "name": "噪波纹理",
+        "type": "ShaderNodeTexNoise"
+      },
+      {
+        "name": "噪波纹理.001",
+        "type": "ShaderNodeTexNoise"
+      },
+      {
+        "name": "混合 (旧版)",
+        "type": "ShaderNodeMixRGB"
+      },
+      {
+        "name": "颜色渐变",
+        "type": "ShaderNodeValToRGB"
+      }
+    ]
+  },
+  "model.001": {
+    "use_nodes": true,
+    "nodes": [
+      {
+        "name": "材质输出",
+        "type": "ShaderNodeOutputMaterial"
+      },
+      {
+        "name": "原理化 BSDF",
+        "type": "ShaderNodeBsdfPrincipled",
+        "base_color": [
+          0.8999999761581421,
+          0.8999999761581421,
+          0.8999999761581421
+        ],
+        "roughness": 0.4000000059604645,
+        "metallic": 0.0
+      },
+      {
+        "name": "图像纹理",
+        "type": "ShaderNodeTexImage",
+        "image": "texture_diffuse-226b94f9-5c20-448b-b38b-2c11438aa253.png"
+      }
+    ]
+  },
+  "model.002": {
+    "use_nodes": true,
+    "nodes": [
+      {
+        "name": "材质输出",
+        "type": "ShaderNodeOutputMaterial"
+      },
+      {
+        "name": "原理化 BSDF",
+        "type": "ShaderNodeBsdfPrincipled",
+        "base_color": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929
+        ],
+        "roughness": 0.699999988079071,
+        "metallic": 0.0
+      },
+      {
+        "name": "图像纹理",
+        "type": "ShaderNodeTexImage",
+        "image": "texture_diffuse-226b94f9-5c20-448b-b38b-2c11438aa253.png"
+      },
+      {
+        "name": "去色",
+        "type": "ShaderNodeRGBToBW"
+      },
+      {
+        "name": "颜色渐变",
+        "type": "ShaderNodeValToRGB"
+      },
+      {
+        "name": "混合 (旧版)",
+        "type": "ShaderNodeMixRGB"
+      }
+    ]
+  }
+}

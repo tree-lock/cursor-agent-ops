@@ -1,0 +1,30 @@
+---
+description: .cursor/rules 使用说明（供人工阅读，可设为 alwaysApply: false 或删除）
+alwaysApply: false
+---
+
+# 规则文件说明
+
+- 本目录下的 `.mdc` 文件是 Cursor 的规则，用于在对话中自动为 AI 提供上下文。
+- **Frontmatter**：`description` 必填；`globs` 指定生效文件；`alwaysApply: true` 表示始终生效。
+- 每条规则建议控制在约 50 行内，一事一议，并配简短示例。
+- 修改后无需重启，Cursor 会按当前打开文件与设置加载对应规则。
+
+## 目录结构
+
+### 根目录规则文件
+- `project-conventions.mdc`：项目约定（alwaysApply: true）
+- `coding-standards.mdc`：MCP 工具使用规范（alwaysApply: true）
+- `readme-rules.mdc`：规则文件说明（alwaysApply: false）
+
+### operations 文件夹
+`operations/` 文件夹包含特定操作的最佳实践文档，这些文档的 `alwaysApply` 设置为 `false`，只在需要时引用：
+
+- `bilibili-operations.mdc`：B站操作最佳实践和常见问题解决方案
+- `blender-operations.mdc`：Blender 3D 建模操作最佳实践和常见问题解决方案
+
+### 使用建议
+- **alwaysApply: true**：核心规范文件，始终生效
+- **alwaysApply: false**：操作文档，按需引用，避免不必要的上下文加载
+- **按需查阅**：在执行相关操作时，可以参考对应的操作文档
+- **持续更新**：根据实际操作经验，持续更新和完善操作文档

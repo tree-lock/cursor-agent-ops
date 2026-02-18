@@ -1,0 +1,211 @@
+---
+description: Blender 3D 建模操作最佳实践和常见问题解决方案
+alwaysApply: false
+---
+
+# Blender 3D 建模操作最佳实践
+
+## 典型流程（最短可复用）
+
+1. **检查场景**：`get_scene_info`
+2. **生成模型**：`generate_*`
+3. **等任务完成**：`poll_rodin_job_status` 直到全是 `"Done"`
+4. **导入**：`import_generated_asset`
+5. **立即摆放**：`execute_blender_code` 调整 `location`，避免与现有对象重叠
+6. **导出成果**：按 `results/*-operations/` 结构导出（见下文）
+
+## 常见问题及解决方案
+
+### 1. AI 模型生成任务状态检查
+
+**问题**：生成任务需要时间，不知道何时完成
+
+**解决方案**：
+- **必须等待所有任务完成**：使用 `poll_rodin_job_status` 检查状态
+- **状态列表必须全部为 "Done"**：只有当所有状态都是 "Done" 时才能导入
+- **避免过早导入**：如果状态列表中还有 "Generating" 或 "Waiting"，必须继续等待
+- **轮询间隔**：可以多次调用 `poll_rodin_job_status` 直到所有任务完成
+
+**避免的错误**：
+- ❌ 看到部分任务完成就尝试导入（会失败）
+- ❌ 不检查状态就直接导入
+- ❌ 只检查一次状态就放弃（应继续轮询）
+
+### 2. 模型位置重叠问题
+
+**问题**：新导入的模型默认位置在 (0, 0, 0)，可能与现有模型重叠
+
+**解决方案**：
+- **导入后立即调整位置**：使用 `execute_blender_code` 设置 `location` 属性
+- **合理布局**：根据场景大小，将模型分散放置
+  - 例如：地球在 (0, 0, 0)，白猫在 (5, 0, 0)，黑猫在 (-5, 0, 0)
+- **检查边界框**：使用 `get_object_info` 查看模型的 `world_bounding_box` 确保不重叠
+
+**正确流程**：
+```
+1. import_generated_asset() - 导入模型
+2. execute_blender_code() - 设置 location 避免重叠
+3. get_scene_info() - 验证所有模型位置
+```
+
+### 3. GLTF 导出格式问题
+
+**问题**：导出操作符名称或参数不正确
+
+**解决方案**：
+- **使用正确的导出操作符**：`bpy.ops.export_scene.gltf`
+- **参数设置**：
+  - `filepath`: 导出文件路径
+  - `use_selection=True`: 只导出选中的对象
+  - `export_format='GLTF_SEPARATE'`: 分离格式（.gltf + .bin）
+  - `export_materials='EXPORT'`: 导出材质
+- **GLTF 分离格式**：会生成两个文件
+  - `.gltf` 文件：JSON 格式的场景描述
+  - `.bin` 文件：二进制几何数据
+
+### 4. 模型圆滑度问题
+
+**问题**：模型不够圆滑，边缘有棱角
+
+**解决方案**：
+- **添加细分表面修改器**：使用 `SUBSURF` 修改器
+- **设置合适的细分级别**：
+  - 视口级别：2-4（用于实时预览）
+  - 渲染级别：3-5（用于最终渲染）
+- **应用平滑着色**：使用 `bpy.ops.object.shade_smooth()`
+- **提高基础几何细分**：创建球体时使用更多分段数（segments, ring_count）
+
+**正确流程**：
+```
+1. 创建或导入模型
+2. 添加细分修改器：modifiers.new(type='SUBSURF')
+3. 设置细分级别：mod.levels = 3, mod.render_levels = 4
+4. 应用平滑着色：bpy.ops.object.shade_smooth()
+```
+
+### 5. 材质和纹理问题
+
+**问题**：材质显示不正确或无法应用
+
+**解决方案**：
+- **检查材质节点**：确保 `mat.use_nodes = True`
+- **使用程序化材质**：通过节点编辑器创建复杂材质
+- **视口模式**：切换到 `MATERIAL` 或 `RENDERED` 模式查看材质效果
+- **材质预览模式**：使用 `space.shading.type = 'MATERIAL'` 查看材质
+
+**常见节点组合**：
+- 噪声纹理 + 颜色渐变：创建地形纹理
+- 坐标节点 + 映射节点：控制纹理坐标
+- 原理化BSDF：基础材质节点
+
+### 6. 场景管理
+
+**问题**：场景对象过多，难以管理
+
+**解决方案**：
+- **使用集合**：将相关对象组织到集合中
+- **命名规范**：使用清晰的命名（如 Earth, WhiteCat, BlackCat）
+- **定期检查**：使用 `get_scene_info` 查看场景状态
+- **删除不需要的对象**：使用 `bpy.data.objects.remove()` 清理场景
+
+## Blender MCP 工具使用技巧
+
+### 工具速记（只记关键）
+
+- **生成**：`generate_*` → **等完成**：`poll_rodin_job_status` → **导入**：`import_generated_asset`
+- **摆放/改材质/导出**：用 `execute_blender_code` 调 Blender Python API
+- **核对**：`get_scene_info` / `get_object_info` / `get_viewport_screenshot`
+
+## 优化建议
+
+### 1. 批量操作优化
+
+- **并行生成**：可以同时提交多个生成任务
+- **顺序导入**：但必须等待每个任务完成后再导入
+- **批量调整位置**：导入后统一调整所有模型位置
+
+### 2. 模型布局建议
+
+- **中心放置主要对象**：如地球在 (0, 0, 0)
+- **对称布局**：白猫在 (5, 0, 0)，黑猫在 (-5, 0, 0)
+- **保持安全距离**：根据模型大小设置合适的间距
+
+### 3. 性能优化
+
+- **细分级别**：视口使用较低级别，渲染使用较高级别
+- **材质预览**：使用 MATERIAL 模式而非 RENDERED 模式进行快速预览
+- **选择性导出**：只导出需要的对象
+
+### 4. 错误处理
+
+- **生成失败**：检查任务状态，如果失败需要重新生成
+- **导入失败**：确保所有任务完成后再导入
+- **导出失败**：检查文件路径和权限
+
+## 示例工作流
+
+### 示例 1：生成并导入白猫模型
+
+```
+1. get_scene_info() - 检查当前场景
+2. generate_hyper3d_model_via_text("white cat, cute, sitting pose") - 提交生成任务
+3. poll_rodin_job_status(subscription_key) - 检查状态
+4. 等待所有状态为 "Done"
+5. import_generated_asset(name="WhiteCat", task_uuid=...) - 导入模型
+6. execute_blender_code() - 设置位置 (5, 0, 0)
+7. get_scene_info() - 验证导入成功
+```
+
+### 示例 2：导出模型
+
+```
+1. get_scene_info() - 获取要导出的对象
+2. execute_blender_code() - 选择对象
+3. execute_blender_code() - 导出为 GLTF 格式
+4. 检查导出文件是否存在
+```
+
+### 示例 3：优化模型圆滑度
+
+```
+1. get_object_info("Earth") - 获取对象信息
+2. execute_blender_code() - 添加细分修改器
+3. execute_blender_code() - 设置细分级别
+4. execute_blender_code() - 应用平滑着色
+5. get_viewport_screenshot() - 查看效果
+```
+
+## 导出成果规范
+
+当用户要求"导出成果"时，需要：
+
+1. **参考现有结构**：查看 `results/` 文件夹下已有的操作文件夹（如 `bilibili-operations/`），使用相同的文件夹结构
+2. **创建子文件夹**：在 `results/` 下创建 `blender-operations/` 子文件夹
+3. **可回滚备份（必须）**：若 `results/blender-operations/` 已存在成果，先创建 `results/blender-operations/old/` 并把原成果移动进去
+3. **导出项目文件**：
+   - `[项目名称].blend`：Blender 项目文件，包含所有模型、材质和场景设置
+   - `[模型名称].gltf` + `[模型名称].bin`：GLTF 格式的模型文件（分离格式）
+   - `[贴图名称].png`：材质贴图文件
+   - `materials_info.json`：材质节点结构信息（JSON 格式）
+4. **创建文档**：
+   - `README.md`：项目说明文档，包含使用说明、文件说明、材质说明
+   - `SUMMARY.md`：操作总结文档，参考 `bilibili-operations/SUMMARY.md` 的格式
+5. **文件组织**：将所有 Blender 相关文件移动到 `blender-operations/` 子文件夹中
+
+### 导出过程的确认/回滚
+
+- **导出遇到问题需用户检查**：暂停并等待用户选择：
+  - **取消导出**：恢复 `old/` 中的文件到原位置
+  - **继续导出**：用户处理问题后继续
+- **导出成功**：等待用户回复 **`确认`** 后才删除 `old/`；若用户回复 **`取消导出`** 则执行回滚
+
+## 注意事项
+
+1. **生成任务需要时间**：AI 模型生成可能需要几分钟，需要耐心等待
+2. **状态检查必须完整**：所有任务状态必须为 "Done" 才能导入
+3. **避免模型重叠**：导入后立即调整位置
+4. **导出格式选择**：GLTF 是最通用的格式，适合大多数用途
+5. **材质预览模式**：切换到 MATERIAL 或 RENDERED 模式才能看到材质效果
+6. **细分级别平衡**：过高的细分级别会影响性能，需要平衡质量和性能
+7. **文件路径**：导出时使用绝对路径或用户目录（如 ~/Downloads）
+8. **导出组织**：导出成果时应该使用子文件夹，参考 `results/bilibili-operations/` 的结构
