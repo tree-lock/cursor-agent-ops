@@ -37,24 +37,22 @@ alwaysApply: true
 
 ## 关键规则
 
-1. **禁止自动添加 Co-author**
-   - 除非用户明确要求，否则**严禁**在提交信息中添加 `Co-authored-by`。
-   - 如果 Cursor 或 Git 钩子自动添加了 Co-author，必须在提交后立即移除（使用 `git commit --amend` 或重写历史）。
-   - 在执行提交命令时，优先使用能避免注入 Co-author 的方式（如直接在终端使用 `git commit` 并检查结果）。
-
-2. **提交前检查**
+1. **提交前检查**
    - 始终先运行 `git status` 确认暂存区状态。
    - 确保没有将敏感文件（如 `.env`）或不必要的文件（如 `node_modules`, `dist`）包含在内。
    - **禁止上传 .DS_Store**：必须在 `.gitignore` 中忽略 `.DS_Store` 文件。如果项目中已存在，必须先删除再提交。
 
-3. **撤销提交 (Undo Commit)**
+2. **撤销提交 (Undo Commit)**
    - 如果用户要求撤销上次提交：
      - **非 Root Commit**: 使用 `git reset --soft HEAD~1`（保留更改在暂存区）。
      - **Root Commit (首次提交)**: 使用 `git update-ref -d HEAD`（撤销提交但保留文件在工作区）。
-   - 撤销后如需重新提交，确保修正之前的问题（如移除 Co-author）。
 
-4. **强制推送**
+3. **强制推送**
    - 严禁对 `main` 或 `master` 分支执行 `git push -f`，除非用户明确授权且你完全理解后果。
 
-5. **合并策略**
+4. **合并策略**
    - 保持提交历史整洁，必要时使用 `rebase` 而非 `merge`（但在共享分支上小心使用）。
+
+5. **推送限制 (Push Restriction)**
+   - **严禁主动执行 `git push`**，除非用户明确发出“git上传”、“上传代码”或类似指令。
+   - 在执行其他 Git 操作（如 commit）后，不要顺手 push，除非得到明确指示。
