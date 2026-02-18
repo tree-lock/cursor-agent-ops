@@ -1,0 +1,60 @@
+---
+description: Git 提交规范与操作指南
+globs: .git/**/*
+alwaysApply: true
+---
+# Git 操作规范
+
+## 提交信息规范 (Conventional Commits)
+
+所有 Git 提交必须遵循 `<type>(<scope>): <subject>` 格式。
+
+### 格式说明
+
+- **type**: 提交类型（必须）
+  - `feat`: 新功能
+  - `fix`: 修复 bug
+  - `docs`: 文档变更
+  - `style`: 代码格式（不影响代码运行的变动）
+  - `refactor`: 重构（既不是新增功能也不是修改 bug 的代码变动）
+  - `perf`: 性能优化
+  - `test`: 增加测试
+  - `chore`: 构建过程或辅助工具的变动
+  - `build`: 影响构建系统或外部依赖的更改
+  - `ci`: CI 配置文件或脚本的修改
+  - `revert`: 回退提交
+- **scope**: 影响范围（可选，但推荐），例如 `init`, `deps`, `ui`, `api` 等
+- **subject**: 简短描述（必须）
+  - 使用祈使句，现在时（例如 "add" 而不是 "added"）
+  -首字母小写
+  - 结尾不加句号
+
+### 示例
+
+- `chore(init): add MCP agent workspace with rules, docs and operations`
+- `feat(auth): implement login with google`
+- `fix(ui): adjust button padding on mobile`
+
+## 关键规则
+
+1. **禁止自动添加 Co-author**
+   - 除非用户明确要求，否则**严禁**在提交信息中添加 `Co-authored-by`。
+   - 如果 Cursor 或 Git 钩子自动添加了 Co-author，必须在提交后立即移除（使用 `git commit --amend` 或重写历史）。
+   - 在执行提交命令时，优先使用能避免注入 Co-author 的方式（如直接在终端使用 `git commit` 并检查结果）。
+
+2. **提交前检查**
+   - 始终先运行 `git status` 确认暂存区状态。
+   - 确保没有将敏感文件（如 `.env`）或不必要的文件（如 `node_modules`, `dist`）包含在内。
+   - **禁止上传 .DS_Store**：必须在 `.gitignore` 中忽略 `.DS_Store` 文件。如果项目中已存在，必须先删除再提交。
+
+3. **撤销提交 (Undo Commit)**
+   - 如果用户要求撤销上次提交：
+     - **非 Root Commit**: 使用 `git reset --soft HEAD~1`（保留更改在暂存区）。
+     - **Root Commit (首次提交)**: 使用 `git update-ref -d HEAD`（撤销提交但保留文件在工作区）。
+   - 撤销后如需重新提交，确保修正之前的问题（如移除 Co-author）。
+
+4. **强制推送**
+   - 严禁对 `main` 或 `master` 分支执行 `git push -f`，除非用户明确授权且你完全理解后果。
+
+5. **合并策略**
+   - 保持提交历史整洁，必要时使用 `rebase` 而非 `merge`（但在共享分支上小心使用）。
